@@ -1,0 +1,46 @@
+import os
+from PIL import Image
+import torch
+from torchvision import transforms
+import matplotlib.pyplot as plt
+import torchvision.transforms.functional as F
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+def load_image(img_path, max_size=400, shape=None):
+    if not os.path.isfile(img_path):
+        raise FileNotFoundError(f"Image file not found: {img_path}")
+    
+    image = Image.open(img_path).convert('RGB')
+    
+    if shape is not None:
+        size = shape
+    else:
+        max_dim = max(image.size)
+        size = max_size if max_dim > max_size else max_dim
+    
+    transform_list = [
+        transforms.Resize(size),
+        transforms.ToTensor()
+    ]
+    
+    image = transforms.Compose(transform_list)(image).unsqueeze(0)
+    return image.to(device)
+
+# **Define content and style BEFORE using them**
+content = load_image("C:/Users/abhay/OneDrive/Pictures/image.jpg")
+style = load_image("C:/Users/abhay/OneDrive/Pictures/image.jpg", shape=content.shape[-2:])
+
+# Function to display images
+def imshow(tensor, title=None):
+    image = tensor.squeeze(0).cpu()
+    image = F.to_pil_image(image)
+    plt.imshow(image)
+    if title:
+        plt.title(title)
+    plt.axis('off')
+    plt.show()
+
+# Display the images
+imshow(content, title="Content Image")
+imshow(style, title="Style Image")
